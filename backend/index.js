@@ -9,7 +9,6 @@ import path from "path";
 
 dotenv.config();
 
-const __dirname = path.resolve();
 
 const app = express();
 app.use(express.json());
@@ -28,6 +27,7 @@ const io = new Server(server, {
 // Handle WebSocket events
 editor(io);
 
+const __dirname = path.resolve();
 const port = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV === "production") {
