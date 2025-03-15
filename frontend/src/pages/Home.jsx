@@ -55,7 +55,7 @@ const Hero = () => {
           platform
         </p>
         <Link
-          to="/create-room"
+          to="/api/create-room"
           className="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors animate-fade-up hover:scale-105 hover:shadow-md"
           style={{ animationDelay: "0.3s" }}
         >

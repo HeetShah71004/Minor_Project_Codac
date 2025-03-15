@@ -134,7 +134,7 @@ const Editor1 = () => {
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
           />
-          <Link to="/editor">
+          <Link to="/api/editor">
             <button onClick={joinRoom}>Join Room</button>
           </Link>
         </div>
