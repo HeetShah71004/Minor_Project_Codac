@@ -6,10 +6,8 @@ import { Link } from "react-router-dom";
 // import toast from "react-hot-toast";
 import { toast, ToastContainer } from "react-toastify";
 
-const socket =
-  import.meta.env.mode === "development"
-    ? io("http://localhost:5000")
-    : io("/api");
+const socket = io("http://localhost:5000");
+
 const Editor1 = () => {
   const [joined, setJoined] = useState(false);
   const [roomId, setRoomId] = useState("");
