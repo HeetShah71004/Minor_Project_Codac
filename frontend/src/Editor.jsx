@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 // import toast from "react-hot-toast";
 import { toast, ToastContainer } from "react-toastify";
 
-const socket = import.meta.env.MODE==="development"?io("http://localhost:5000"):io("/api");
+const socket = import.meta.env.MODE==="development"?io("http://localhost:5000"):io("https://project-codac.onrender.com");
 
 const Editor1 = () => {
   const [joined, setJoined] = useState(false);
