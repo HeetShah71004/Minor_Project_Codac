@@ -12,10 +12,10 @@ const editor = (io) => {
     socket.on("join", ({ roomId, userName }) => {
       if (currentRoom) {
         socket.leave(currentRoom);
-        rooms.get(currentRoom).delete(currentUser);
+        rooms.get(currentRoom).users.delete(currentUser);
         io.to(currentRoom).emit(
           "userJoined",
-          Array.from(rooms.get(currentRoom))
+          Array.from(rooms.get(currentRoom).users)
         );
       }
 
@@ -25,12 +25,20 @@ const editor = (io) => {
       socket.join(roomId);
 
       if (!rooms.has(roomId)) {
-        rooms.set(roomId, new Set());
+        rooms.set(roomId, {
+          users: new Set(),
+          code: "// start code here",
+        });
       }
 
-      rooms.get(roomId).add(userName);
+      rooms.get(roomId).users.add(userName);
 
-      io.to(roomId).emit("userJoined", Array.from(rooms.get(currentRoom)));
+      socket.emit("codeUpdate", rooms.get(roomId).code);
+
+      io.to(roomId).emit(
+        "userJoined",
+        Array.from(rooms.get(currentRoom).users)
+      );
 
       // 🔥 Emit toast message when a user joins
       io.to(roomId).emit("toastMessage", {
@@ -41,21 +49,24 @@ const editor = (io) => {
 
     // Code changes
     socket.on("codeChange", ({ roomId, code }) => {
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).code = code;
+      }
       socket.to(roomId).emit("codeUpdate", code);
     });
 
     // Leave a room
     socket.on("leaveRoom", () => {
       if (currentRoom && currentUser) {
-        rooms.get(currentRoom).delete(currentUser);
+        rooms.get(currentRoom).users.delete(currentUser);
         io.to(currentRoom).emit(
           "userJoined",
-          Array.from(rooms.get(currentRoom))
+          Array.from(rooms.get(currentRoom).users)
         );
 
         // 🔥 Emit toast message when a user leaves
         io.to(currentRoom).emit("toastMessage", {
-          type: "warning",
+          type: "success",
           message: `${currentUser} left the room!`,
         });
 
@@ -125,10 +136,10 @@ const editor = (io) => {
     // Handle disconnection
     socket.on("disconnect", () => {
       if (currentRoom && currentUser) {
-        rooms.get(currentRoom).delete(currentUser);
+        rooms.get(currentRoom).users.delete(currentUser);
         io.to(currentRoom).emit(
           "userJoined",
-          Array.from(rooms.get(currentRoom))
+          Array.from(rooms.get(currentRoom).users)
         );
         // 🔥 Emit toast message when a user disconnects
         io.to(currentRoom).emit("toastMessage", {

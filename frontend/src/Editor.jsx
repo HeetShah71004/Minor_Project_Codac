@@ -5,6 +5,7 @@ import Editor from "@monaco-editor/react";
 import { Link } from "react-router-dom";
 // import toast from "react-hot-toast";
 import { toast, ToastContainer } from "react-toastify";
+import {v4 as uuid} from "uuid";
 
 const socket = import.meta.env.MODE==="development"?io("http://localhost:5000"):io("https://project-codac.onrender.com");
 
@@ -117,6 +118,11 @@ const Editor1 = () => {
     toast.success("Code compiled and executed!");
   };
 
+  const createRoomId = () => {
+    const roomId = uuid();
+    setRoomId(roomId);
+  }
+
   if (!joined) {
     return (
       <div className="join-container">
@@ -128,6 +134,9 @@ const Editor1 = () => {
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
           />
+          <button onClick={createRoomId}>
+            create Room Id
+          </button>
           <input
             type="text"
             placeholder="Your Name"
