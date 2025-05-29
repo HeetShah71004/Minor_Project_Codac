@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import {v4 as uuid} from "uuid";
 
-const socket = import.meta.env.MODE==="development"?io("http://localhost:5000"):io("https://project-codac.onrender.com");
+const socket = import.meta.env.MODE==="development"?io("http://localhost:5001"):io("https://project-codac.onrender.com");
 
 const Editor1 = () => {
   const [joined, setJoined] = useState(false);
@@ -178,6 +178,12 @@ const Editor1 = () => {
           <option value="python">Python</option>
           <option value="java">Java</option>
           <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="csharp">C#</option>
+          <option value="php">PHP</option>
+          <option value="go">Go</option>
+          <option value="ruby">Ruby</option>
+          <option value="rust">Rust</option>
         </select>
         <Link to="/">
           <button className="leave-button" onClick={leaveRoom}>
