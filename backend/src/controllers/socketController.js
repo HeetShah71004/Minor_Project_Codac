@@ -1,75 +1,155 @@
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import axios from "axios";
+const editor = (io) => {
+  const rooms = new Map();
 
+  io.on("connection", (socket) => {
+    console.log("User Connected", socket.id);
 
-function isStrongPassword(password) {
-  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
-  return strongPasswordRegex.test(password);
-}
+    let currentRoom = null;
+    let currentUser = null;
 
-export const signup = async (req, res) => {
-  const { name, email, password } = req.body;
+    // Join a room
+    socket.on("join", ({ roomId, userName }) => {
+      if (currentRoom) {
+        socket.leave(currentRoom);
+        rooms.get(currentRoom).users.delete(currentUser);
+        io.to(currentRoom).emit(
+          "userJoined",
+          Array.from(rooms.get(currentRoom).users)
+        );
+      }
 
-  if (!isStrongPassword(password)) {
-    return res.status(400).json({
-      message: "Password must be minimum 8 characters, include uppercase, lowercase, number and special character."
+      currentRoom = roomId;
+      currentUser = userName;
+
+      socket.join(roomId);
+
+      if (!rooms.has(roomId)) {
+        rooms.set(roomId, {
+          users: new Set(),
+          code: "// start code here",
+        });
+      }
+
+      rooms.get(roomId).users.add(userName);
+
+      socket.emit("codeUpdate", rooms.get(roomId).code);
+
+      io.to(roomId).emit(
+        "userJoined",
+        Array.from(rooms.get(currentRoom).users)
+      );
+
+      // 🔥 Emit toast message when a user joins
+      io.to(roomId).emit("toastMessage", {
+        type: "success",
+        message: `${userName} joined the room!`,
+      });
     });
-  }
 
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists with this email" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword)
-
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
+    // Code changes
+    socket.on("codeChange", ({ roomId, code }) => {
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).code = code;
+      }
+      socket.to(roomId).emit("codeUpdate", code);
     });
 
-    await newUser.save();
+    // Leave a room
+    socket.on("leaveRoom", () => {
+      if (currentRoom && currentUser) {
+        rooms.get(currentRoom).users.delete(currentUser);
+        io.to(currentRoom).emit(
+          "userJoined",
+          Array.from(rooms.get(currentRoom).users)
+        );
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        _id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
+        // 🔥 Emit toast message when a user leaves
+        io.to(currentRoom).emit("toastMessage", {
+          type: "success",
+          message: `${currentUser} left the room!`,
+        });
+
+        socket.leave(currentRoom);
+
+        currentRoom = null;
+        currentUser = null;
       }
     });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during signup" });
-  }
-};
 
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-    // Generate JWT token
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+    // Typing events
+    socket.on("typing", ({ roomId, userName }) => {
+      socket.to(roomId).emit("userTyping", userName);
     });
-    
-    if (!token) {
-      return res.status(400).json({ message: "token not generated" });
-    }
-    res.status(200).json({ user, token });
-  } catch (err) {
-    res.status(500).json({ message: "Login failed", error: err.message });
-  }
+
+    // Language changes
+    socket.on("languageChange", ({ roomId, language }) => {
+      io.to(roomId).emit("languageUpdate", language);
+      io.to(roomId).emit("toastMessage", {
+        type: "info",
+        message: `Language changed to ${language}`,
+      });
+    });
+
+    // Compile code
+    socket.on(
+      "compileCode",
+      async ({ code, roomId, language, version, userInput }) => {
+        if (rooms.has(roomId)) {
+          const room = rooms.get(roomId);
+          try {
+            const response = await axios.post(
+              "https://emkc.org/api/v2/piston/execute",
+              {
+                language,
+                version,
+                files: [
+                  {
+                    content: code,
+                  },
+                ],
+                stdin: userInput, // Pass user input
+              }
+            );
+
+            room.output = response.data.run.output;
+            io.to(roomId).emit("codeResponse", response.data);
+            // io.to(roomId).emit("codeResponse", response.data).select("-stdin");
+            // 🔥 Emit toast message on successful compilation
+            io.to(roomId).emit("toastMessage", {
+              type: "success",
+              message: "Code compiled successfully!",
+            });
+          } catch (error) {
+            console.error("Error during code compilation:", error);
+            io.to(roomId).emit("codeError", "Failed to compile code.");
+            // 🔥 Emit toast message for compilation error
+            io.to(roomId).emit("toastMessage", {
+              type: "error",
+              message: "Compilation failed!",
+            });
+          }
+        }
+      }
+    );
+
+    // Handle disconnection
+    socket.on("disconnect", () => {
+      if (currentRoom && currentUser) {
+        rooms.get(currentRoom).users.delete(currentUser);
+        io.to(currentRoom).emit(
+          "userJoined",
+          Array.from(rooms.get(currentRoom).users)
+        );
+        // 🔥 Emit toast message when a user disconnects
+        io.to(currentRoom).emit("toastMessage", {
+          type: "warning",
+          message: `${currentUser} disconnected!`,
+        });
+      }
+      console.log("User Disconnected");
+    });
+  });
 };
+
+export default editor;
