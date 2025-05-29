@@ -3,6 +3,10 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+const login =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5001"
+    : "https://project-codac.onrender.com/";
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -17,7 +21,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5001/api/auth/login", form);
+      const res = await axios.post(`${login}/api/auth/login`, form);
       const { token, user } = res.data;
 
       localStorage.setItem("token", token);
@@ -26,12 +30,14 @@ const Login = () => {
       toast.success("Login successful! Redirecting to home page...");
       setTimeout(() => navigate("/"), 1000);
     } catch (error) {
-      alert(error.response?.data?.message || "Login failed. Please check your credentials.");
+      alert(
+        error.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white px-4">
@@ -39,7 +45,9 @@ const Login = () => {
         onSubmit={handleSubmit}
         className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl space-y-6 border border-gray-200"
       >
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Welcome Back</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">
+          Welcome Back
+        </h2>
         <p className="text-center text-gray-600 mb-6">Login to your account</p>
 
         <input
@@ -70,7 +78,10 @@ const Login = () => {
         </button>
 
         <p className="text-center text-sm text-gray-500">
-          Don't have an account? <a href="/signup" className="text-[#F83002] font-medium">Sign Up</a>
+          Don't have an account?{" "}
+          <a href="/signup" className="text-[#F83002] font-medium">
+            Sign Up
+          </a>
         </p>
       </form>
     </div>
