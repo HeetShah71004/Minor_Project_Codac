@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const signup = import.meta.env.MODE==="development"?("http://localhost:5001"):("https://project-codac.onrender.com/");
+const signup =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5001"
+    : "https://project-codac.onrender.com/";
 const Signup = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -47,8 +50,12 @@ const Signup = () => {
         onSubmit={handleSubmit}
         className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl space-y-6 border border-gray-200"
       >
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Create Account</h2>
-        <p className="text-center text-gray-600 mb-6">Start your journey with us</p>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">
+          Create Account
+        </h2>
+        <p className="text-center text-gray-600 mb-6">
+          Start your journey with us
+        </p>
 
         <input
           type="text"
@@ -74,7 +81,7 @@ const Signup = () => {
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-black" 
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-black"
           required
         />
 
@@ -87,7 +94,10 @@ const Signup = () => {
         </button>
 
         <p className="text-center text-sm text-gray-500">
-          Already have an account? <a href="/login" className="text-[#F83002] font-medium">Login</a>
+          Already have an account?{" "}
+          <a href="/login" className="text-[#F83002] font-medium">
+            Login
+          </a>
         </p>
       </form>
     </div>
