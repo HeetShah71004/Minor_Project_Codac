@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const login =
   import.meta.env.MODE === "development"
     ? "http://localhost:5001"
-    : "https://project-codac.onrender.com/";
+    : "https://project-codac.onrender.com";
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);

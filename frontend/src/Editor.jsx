@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import {v4 as uuid} from "uuid";
 
-const socket = import.meta.env.MODE==="development"?io("http://localhost:5001"):io("https://project-codac.onrender.com/");
+const socket = import.meta.env.MODE==="development"?io("http://localhost:5001"):io("https://project-codac.onrender.com");
 
 const Editor1 = () => {
   const [joined, setJoined] = useState(false);

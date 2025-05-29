@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 const signup =
   import.meta.env.MODE === "development"
     ? "http://localhost:5001"
-    : "https://project-codac.onrender.com/";
+    : "https://project-codac.onrender.com";
 const Signup = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
